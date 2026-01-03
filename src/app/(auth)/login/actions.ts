@@ -10,7 +10,7 @@ import { redirect } from "next/navigation";
 
 export async function login(
   credentials: LoginValues,
-): Promise<{ error: String }> {
+): Promise<{ error: string }> {
   try {
     const { password, username } = loginSchema.parse(credentials);
 
