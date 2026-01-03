@@ -7,7 +7,7 @@ import UserAvatar from "@/components/UserAvatar";
 import { useSession } from "@/app/(main)/sessionProvider";
 import { Button } from "@/components/ui/button";
 import { submitPosts } from "./actions";
-import "./styles.css"
+import "./styles.css";
 
 export default function PostEditor() {
   const { user } = useSession();
@@ -31,8 +31,8 @@ export default function PostEditor() {
 
   const onSubmit = async () => {
     await submitPosts(input);
-    editor?.commands.clearContent()
-  }
+    editor?.commands.clearContent();
+  };
 
   return (
     <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm">
@@ -45,11 +45,11 @@ export default function PostEditor() {
       </div>
       <div className="flex justify-end">
         <Button
-            onClick={onSubmit}
-            disabled={!input.trim()}
-            className="min-w-20"
+          onClick={onSubmit}
+          disabled={!input.trim()}
+          className="min-w-20"
         >
-            Post
+          Post
         </Button>
       </div>
     </div>
