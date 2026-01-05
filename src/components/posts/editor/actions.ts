@@ -2,9 +2,10 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
+import { postDataInclude } from "@/lib/types";
 import { createPostSchema } from "@/lib/validation";
 
-export async function submitPosts(input: string) {
+export async function submitPost(input: string) {
   const { user } = await validateRequest();
 
   if (!user) throw Error("Unauthorized");
@@ -13,10 +14,12 @@ export async function submitPosts(input: string) {
     content: input,
   });
 
-  await prisma.post.create({
+  const newPost = await prisma.post.create({
     data: {
       content: content,
       userId: user.id,
     },
+    include: postDataInclude
   });
+  return newPost;
 }

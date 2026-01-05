@@ -31,6 +31,7 @@ export default function ForYouFeed() {
             : {},
         )
         .json<PostsPage>(),
+        // the data we get is in form of {pages: PostsPage[], pageParams: [null, 123, 343]}
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
