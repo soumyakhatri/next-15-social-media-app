@@ -1,36 +1,42 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { userDataSelect } from "@/lib/types";
+import { getUserDataSelect } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import UserAvatar from "./UserAvatar";
-import { Button } from "./ui/button";
 import { unstable_cache } from "next/cache";
 import { formatNumber } from "@/lib/utils";
+import FollowButton from "./FollowButton";
 
 export default function TrendsSidebar() {
   return (
     <div className="sticky top-[5.25rem] hidden h-fit w-72 flex-none space-y-5 md:block lg:w-80">
       <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
         <WhoToFollow />
-        <TrendingTopics/>
+        <TrendingTopics />
       </Suspense>
     </div>
   );
 }
 
 async function WhoToFollow() {
-  const { user } = await validateRequest();
-  if (!user) return null;
+  const { user: loggedInUser } = await validateRequest();
+  if (!loggedInUser) return null;
 
   const usersToFollow = await prisma.user.findMany({
     where: {
       NOT: {
-        id: user.id,
+        id: loggedInUser.id,
       },
+      followers: {
+        none: {
+          followerId: loggedInUser.id
+        }
+      }
+      
     },
-    select: userDataSelect,
+    select: getUserDataSelect(loggedInUser.id),
     take: 5,
   });
 
@@ -43,7 +49,7 @@ async function WhoToFollow() {
             href={`users/${user.username}`}
             className="flex items-center gap-3"
           >
-            <UserAvatar avatarUrl={user.avatar} className="flex-none"/>
+            <UserAvatar avatarUrl={user.avatar} className="flex-none" />
             <div>
               <p className="line-clamp-1 break-all font-semibold hover:underline">
                 {user.displayName}
@@ -53,7 +59,19 @@ async function WhoToFollow() {
               </p>
             </div>
           </Link>
-          <Button>Follow</Button>
+          <FollowButton
+            userId={user.id}
+            initialState={{
+              followers: user._count.followers,
+              isFollowedByUser: user.followers.some(
+                (f) => {
+                  console.log(f)
+                  console.log(user.id)
+                  return f.followerId === loggedInUser.id
+                },
+              ),
+            }}
+          />
         </div>
       ))}
     </div>
@@ -77,9 +95,9 @@ const getTrendingTopics = unstable_cache(
       count: Number(row.count),
     }));
   },
-  ["trending_topics"],   // key for cache
+  ["trending_topics"], // key for cache
   {
-    revalidate: 3 * 60 * 60,  // in prod it revalidate every 3 hours. In dev it does not cache.
+    revalidate: 3 * 60 * 60, // in prod it revalidate every 3 hours. In dev it does not cache.
   },
 );
 
