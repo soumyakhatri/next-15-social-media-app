@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss"
+import { withUt } from "uploadthing/tw";
+// we dont need withUt because we are not using components from uploadthing but we have kept it any way. it doesnt hurt to have it.
 
 const config = {
   darkMode: ["class"],
@@ -77,4 +79,4 @@ const config = {
   plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
-export default config
+export default withUt(config)
