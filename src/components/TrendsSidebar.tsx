@@ -66,8 +66,6 @@ async function WhoToFollow() {
             initialState={{
               followers: user._count.followers,
               isFollowedByUser: user.followers.some((f) => {
-                console.log(f);
-                console.log(user.id);
                 return f.followerId === loggedInUser.id;
               }),
             }}

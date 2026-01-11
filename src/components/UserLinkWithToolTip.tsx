@@ -27,8 +27,6 @@ export default function UserLinkWithToolTip( {
     },
   });
 
-  console.log(data);
-
   if (!data) {
     return (
       <Link
