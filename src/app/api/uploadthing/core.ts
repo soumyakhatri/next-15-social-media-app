@@ -25,11 +25,11 @@ export const fileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       const oldAvatarUrl = metadata.user.avatar;
 
-      if(oldAvatarUrl){
-        const arr = oldAvatarUrl.split("/")
-        const key = arr[arr.length -1]
+      if (oldAvatarUrl) {
+        const arr = oldAvatarUrl.split("/");
+        const key = arr[arr.length - 1];
 
-        await utapi.deleteFiles(key)
+        await utapi.deleteFiles(key);
       }
       // This code RUNS ON YOUR SERVER after upload
       const newAvatarUrl = file.ufsUrl;
@@ -43,6 +43,35 @@ export const fileRouter = {
       });
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { avatar: newAvatarUrl };
+    }),
+  attachments: f({
+    image: {
+      maxFileSize: "4MB",
+      maxFileCount: 5,
+    },
+    video: {
+      maxFileSize: "64MB",
+      maxFileCount: 5,
+    },
+  })
+    .middleware(async ({ req }) => {
+      // This code runs on your server before upload
+      const { user } = await validateRequest();
+      // If you throw, the user will not be able to upload
+      if (!user) throw new UploadThingError("Unauthorized");
+      // Whatever is returned here is accessible in onUploadComplete as `metadata`
+      return {};
+    })
+    .onUploadComplete(async ({ file }) => {
+      // stores the file type and file url in db in media table
+      const media = await prisma.media.create({
+        data: {
+          type: file.type.startsWith("image") ? "IMAGE" : "VIDEO",
+          url: file.ufsUrl,
+        },
+      });
+      // this is returned to the front end
+      return { mediaId: media.id };
     }),
 } satisfies FileRouter;
 

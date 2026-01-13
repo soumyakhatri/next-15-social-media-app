@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-import { Toast, ToastProvider } from "@/components/ui/toast";
 import ReactQueryProvider from "./ReactQueryProvider";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { fileRouter } from "./api/uploadthing/core";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -43,7 +43,6 @@ export default function RootLayout({
           routerConfig={extractRouterConfig(fileRouter)}
         />
         <ReactQueryProvider>
-          <ToastProvider>
             <ThemeProvider
               attribute="class"
               defaultTheme="system"
@@ -52,8 +51,7 @@ export default function RootLayout({
             >
               {children}
             </ThemeProvider>
-            <Toast />
-          </ToastProvider>
+            <Toaster />
         </ReactQueryProvider>
       </body>
     </html>
