@@ -10,7 +10,7 @@ import { useSubmitPostMutation } from "./mutations";
 import LoadingButton from "@/components/LoadingButton";
 import { Button } from "@/components/ui/button";
 import { ImageIcon, Loader2, X } from "lucide-react";
-import { useRef } from "react";
+import { ClipboardEvent, useRef } from "react";
 import useMediaUploads, { Attachment } from "./useMediaUpload";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -69,6 +69,23 @@ export default function PostEditor() {
   // therefore we destrucre getRootProps and use the remaining props without onClick.
   const { onClick, ...rootProps } = getRootProps();
 
+  const onPaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    const files = Array.from(e.clipboardData.items) // all the items such as files, string,  text/html, image/png and application/x-something
+      .filter((item) => item.kind === "file") // filters only the file
+      .map((item) => item.getAsFile()) as File[]; //That converts clipboard memory → browser File object. Without it, paste-to-upload simply doesn’t work.
+    startUpload(files);
+    // this works for
+    // ✔ Screenshots
+    // ✔ Copied images
+    // ✔ Dragged files
+    // ✔ Mobile paste
+    // ✔ Windows Snip Tool
+    // ✔ macOS screenshot
+
+    // the below one has many issues
+    // Array.from(e.clipboardData.files);
+  };
+
   return (
     <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm">
       <div className="flex gap-5">
@@ -80,6 +97,7 @@ export default function PostEditor() {
               "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
               isDragActive && "outline-dashed",
             )}
+            onPaste={onPaste}
           />
           {/* this input field will be hidden by default. hidden property is in getInputProps */}
           <input {...getInputProps()} />
