@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 
 export async function signup(
   credentials: SignUpValues,
-): Promise<{ error: String }> {
+): Promise<{ error: string }> {
   try {
     const { email, password, username } = signUpSchema.parse(credentials);
 
