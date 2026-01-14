@@ -9,7 +9,7 @@ import Linkify from "../Linkify";
 import UserTooltip from "../UserTooltip";
 import Image from "next/image";
 import { Media } from "@prisma/client";
-import { cn } from "@/lib/utils";
+import { cn, formatRelativeDate } from "@/lib/utils";
 
 interface PostProps {
   post: PostData;
@@ -38,8 +38,9 @@ export default function Post({ post }: PostProps) {
             <Link
               href={`/posts/${post.id}`}
               className="block text-sm text-muted-foreground hover:underline"
+              suppressHydrationWarning
             >
-              {/* {`${formatRelativeDate(post.createdAt)}`} */}
+              {`${formatRelativeDate(post.createdAt)}`}
             </Link>
           </div>
         </div>
