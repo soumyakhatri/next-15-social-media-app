@@ -53,7 +53,7 @@ export default async function UsersPage({
   if (!loggedInUser)
     return (
       <p className="text-destructive">
-        You're not authorized to view this page.
+        You@apos;re not authorized to view this page.
       </p>
     );
   const user = await getUser(username, loggedInUser.id);
@@ -63,7 +63,7 @@ export default async function UsersPage({
         <UserProfile user={user} loggedInUserId={loggedInUser.id} />
         <div className="rounded-2xl bg-card p-5 shadow-sm">
           <h2 className="text-center text-2xl font-bold">
-            {user.displayName}'s posts
+            {user.displayName}@apos;s posts
           </h2>
         </div>
         <UserPosts userId={user.id} />

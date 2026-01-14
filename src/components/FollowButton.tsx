@@ -3,11 +3,7 @@
 import { FollowerInfo } from "@/lib/types";
 import { Button } from "./ui/button";
 import useFollowerInfo from "@/hooks/useFollowerInfo";
-import {
-  QueryKey,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 import kyInstance from "@/lib/ky";
 import { useToast } from "./ui/use-toast";
 
@@ -47,7 +43,8 @@ export default function FollowButton({
       return prevState;
     },
     onError(error, _variables, context) {
-        console.log(error)
+      // context is the value returned by the onMutate function
+      console.log(error);
       toast({
         variant: "destructive",
         description: "Some",
