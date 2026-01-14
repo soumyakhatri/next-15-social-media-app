@@ -11,6 +11,7 @@ export interface Attachment {
 export default function useMediaUploads() {
   const { toast } = useToast();
 
+  //attachments is only for the UI
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>();
 

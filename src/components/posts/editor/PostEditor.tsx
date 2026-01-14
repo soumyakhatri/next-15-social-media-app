@@ -14,6 +14,7 @@ import { useRef } from "react";
 import useMediaUploads, { Attachment } from "./useMediaUpload";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useDropzone } from "@uploadthing/react";
 
 export default function PostEditor() {
   const { user } = useSession();
@@ -26,6 +27,10 @@ export default function PostEditor() {
     startUpload,
     uploadProgress,
   } = useMediaUploads();
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: startUpload,
+  });
 
   const editor = useEditor({
     extensions: [
@@ -49,7 +54,7 @@ export default function PostEditor() {
     mutation.mutate(
       {
         content: input,
-        mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
+        mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[], //media/attachments are already uploaded in the uploadthings library. we got mediaIds after the upload is done
       },
       {
         onSuccess: () => {
@@ -60,14 +65,25 @@ export default function PostEditor() {
     );
   };
 
+  // with onClick it will open the file explorer when we click on the input field. But we want focus when we click on it.
+  // therefore we destrucre getRootProps and use the remaining props without onClick.
+  const { onClick, ...rootProps } = getRootProps();
+
   return (
     <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm">
       <div className="flex gap-5">
         <UserAvatar avatarUrl={user.avatar} className="hidden sm:inline" />
-        <EditorContent
-          editor={editor}
-          className="max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3"
-        />
+        <div className="w-full" {...rootProps}>
+          <EditorContent
+            editor={editor}
+            className={cn(
+              "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
+              isDragActive && "outline-dashed",
+            )}
+          />
+          {/* this input field will be hidden by default. hidden property is in getInputProps */}
+          <input {...getInputProps()} />
+        </div>
       </div>
       {!!attachments.length && (
         <AttachmentPreviews
@@ -90,7 +106,7 @@ export default function PostEditor() {
           onClick={onSubmit}
           disabled={!input.trim() || isUploading}
           className="min-w-20"
-          loading={mutation.isPending }
+          loading={mutation.isPending}
         >
           Post
         </LoadingButton>
