@@ -10,6 +10,7 @@ import UserTooltip from "../UserTooltip";
 import Image from "next/image";
 import { Media } from "@prisma/client";
 import { cn, formatRelativeDate } from "@/lib/utils";
+import LikeButton from "./LikeButton";
 
 interface PostProps {
   post: PostData;
@@ -57,6 +58,14 @@ export default function Post({ post }: PostProps) {
       {!!post.attachments.length && (
         <MediaPreviews attachments={post.attachments} />
       )}
+      <hr className="text-muted-foreground" />
+      <LikeButton
+        postId={post.id}
+        initialState={{
+          isLikedByUser: post.likes.some((like) => like.userId === user.id),
+          likes: post._count.likes,
+        }}
+      />
     </article>
   );
 }
