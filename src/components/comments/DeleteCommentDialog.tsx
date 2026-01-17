@@ -1,4 +1,3 @@
-import { PostData } from "@/lib/types";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -8,24 +7,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import { useDeletePostMutation } from "./mutations";
 import LoadingButton from "../LoadingButton";
+import { CommentData } from "@/lib/types";
+import { useDeleteCommentMutation } from "./mutation";
 
-interface DeletePostDialogProps {
+interface DeleteCommentDialogProps {
   open: boolean;
-  post: PostData;
+  comment: CommentData;
   onclose: () => void;
 }
 
-export default function DeletePostDialog({
+export default function DeleteCommentDialog({
   open,
-  post,
+  comment,
   onclose,
-}: DeletePostDialogProps) {
-  const mutation = useDeletePostMutation();
+}: DeleteCommentDialogProps) {
+  const mutation = useDeleteCommentMutation();
 
-  const handleDeletePost = () => {
-    mutation.mutate(post.id, {
+  const handleDeleteComment = () => {
+    mutation.mutate(comment.id, {
       onSuccess: onclose,
     });
   };
@@ -40,15 +40,15 @@ export default function DeletePostDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Delete Post?</DialogTitle>
+          <DialogTitle>Delete Comment?</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this post? This action cannot be
+            Are you sure you want to delete this comment? This action cannot be
             undone.
           </DialogDescription>
           <DialogFooter className="mt-5 pt-5">
             <LoadingButton
               variant={"destructive"}
-              onClick={handleDeletePost}
+              onClick={handleDeleteComment}
               loading={mutation.isPending}
             >
               Delete

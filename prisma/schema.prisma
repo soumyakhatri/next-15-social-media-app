@@ -27,9 +27,10 @@ model User {
   posts        Post[]
   followers    Follow[]  @relation("Followers")
   following    Follow[]  @relation("Following")
+  likes        Like[]
+  comments     Comment[]
 
   createdAt DateTime @default(now())
-  likes     Like[]
 
   @@map("users")
 }
@@ -44,14 +45,15 @@ model Session {
 }
 
 model Post {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   content     String
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   attachments Media[]
   likes       Like[]
+  comments    Comment[]
 
   @@map("posts")
 }
@@ -64,6 +66,19 @@ model Follow {
 
   @@unique([followerId, followingId])
   @@map("followers")
+}
+
+model Comment {
+  id      String @id @default(cuid())
+  content String
+  postId  String
+  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("comments")
 }
 
 model Media {
