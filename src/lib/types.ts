@@ -39,12 +39,12 @@ export const getPostDataInclude = (loggedInUserId: string) => {
     _count: {
       select: {
         likes: true,
-        comments: true
+        comments: true,
       },
     },
     comments: {
-      include: getCommentDataInclude(loggedInUserId)
-    }
+      include: getCommentDataInclude(loggedInUserId),
+    },
   } satisfies Prisma.PostInclude;
 };
 
@@ -59,18 +59,18 @@ export type PostData = Prisma.PostGetPayload<{
 export const getCommentDataInclude = (loggedInUserId: string) => {
   return {
     user: {
-      select: getUserDataSelect(loggedInUserId)
-    }
-  } satisfies Prisma.PostInclude
-}
+      select: getUserDataSelect(loggedInUserId),
+    },
+  } satisfies Prisma.PostInclude;
+};
 
 export type CommentData = Prisma.CommentGetPayload<{
-  include: ReturnType<typeof getCommentDataInclude>
-}>
+  include: ReturnType<typeof getCommentDataInclude>;
+}>;
 
 export interface CommentsPage {
-  comments: CommentData[],
-  previousCursor: string | null
+  comments: CommentData[];
+  previousCursor: string | null;
 }
 
 export interface PostsPage {
@@ -86,4 +86,32 @@ export interface FollowerInfo {
 export interface LikeInfo {
   likes: number;
   isLikedByUser: boolean;
+}
+
+export const notificationsInclude = {
+  issuer: {
+    select: {
+      username: true,
+      displayName: true,
+      avatar: true,
+    },
+  },
+  post: {
+    select: {
+      content: true,
+    },
+  },
+} satisfies Prisma.NotificationInclude;
+
+export type NotificationData = Prisma.NotificationGetPayload<{
+  include: typeof notificationsInclude;
+}>;
+
+export interface NotificationsPage {
+  notifications: NotificationData[];
+  nextCursor: string | null;
+}
+
+export interface NotificationCountInfo {
+  unreadCount: number
 }

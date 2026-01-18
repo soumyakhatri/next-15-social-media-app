@@ -58,7 +58,7 @@ export async function POST(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.follow.upsert({
+    const upsertFollow = prisma.follow.upsert({
       where: {
         followerId_followingId: {
           followerId: loggedInUser.id,
@@ -71,6 +71,16 @@ export async function POST(
       },
       update: {},
     });
+
+    const createNotification = prisma.notification.create({
+      data: {
+        issuerId: loggedInUser.id,
+        recipientId: userId,
+        type: "FOLLOW",
+      },
+    });
+
+    await prisma.$transaction([upsertFollow, createNotification]);
 
     return new Response();
   } catch (error) {
@@ -89,12 +99,23 @@ export async function DELETE(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.follow.deleteMany({
+    const deleteFollow = prisma.follow.deleteMany({
       where: {
         followerId: loggedInUser.id,
         followingId: userId,
       },
     });
+
+    // we dont have the id of the follow to be deleted. Delete wont work without it. therefore using deleteMany
+    const deleteNotification = prisma.notification.deleteMany({
+      where: {
+        issuerId: loggedInUser.id,
+        recipientId: userId,
+        type: "FOLLOW",
+      },
+    });
+
+    await prisma.$transaction([deleteFollow, deleteNotification]);
 
     return new Response();
   } catch (error) {

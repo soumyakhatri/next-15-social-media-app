@@ -21,7 +21,7 @@ export async function submitComment({
     content,
   });
 
-  const newComment = await prisma.comment.create({
+  const createComment = prisma.comment.create({
     data: {
       content: contentValidated,
       postId: post.id,
@@ -29,6 +29,16 @@ export async function submitComment({
     },
     include: getCommentDataInclude(loggedInUser.id),
   });
+
+ const createNotification = prisma.notification.create({
+      data: {
+        issuerId: loggedInUser.id,
+        recipientId: post.userId,
+        type: "COMMENT",
+        postId: post.id
+      },
+    });
+  const [newComment] = await prisma.$transaction([createComment, ...(loggedInUser.id !== post.userId ? [createNotification] : []) ])
 
   return newComment;
 }
@@ -50,6 +60,10 @@ export async function deleteComment(commentId: string) {
   if (comment.userId !== loggedInUser.id) {
     throw new Error("Unauthorized");
   }
+
+  // we dont need notification for deleting a comment
+  // we cant identify which comment got deleted
+  // if we want to do it then we will have to use another row in Notification table called CommentId
 
   const deletedComment = await prisma.comment.delete({
     where: {
