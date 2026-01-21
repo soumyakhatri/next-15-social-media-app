@@ -1,6 +1,10 @@
 import { validateRequest } from "@/auth";
+import {
+  notifyUserCreated ,
+  notifyUserDeleted ,
+} from "@/lib/notifySocket";
 import prisma from "@/lib/prisma";
-import { FollowerInfo } from "@/lib/types";
+import { FollowerInfo, notificationsInclude } from "@/lib/types";
 
 export async function GET(
   req: Request,
@@ -78,9 +82,15 @@ export async function POST(
         recipientId: userId,
         type: "FOLLOW",
       },
+      include: notificationsInclude,
     });
 
-    await prisma.$transaction([upsertFollow, createNotification]);
+    const [notification] = await prisma.$transaction([
+      createNotification,
+      upsertFollow,
+    ]);
+
+    await notifyUserCreated (userId, notification);
 
     return new Response();
   } catch (error) {
@@ -106,16 +116,24 @@ export async function DELETE(
       },
     });
 
-    // we dont have the id of the follow to be deleted. Delete wont work without it. therefore using deleteMany
-    const deleteNotification = prisma.notification.deleteMany({
+    const findNotification = prisma.notification.findFirst({
       where: {
         issuerId: loggedInUser.id,
         recipientId: userId,
         type: "FOLLOW",
       },
+      include: notificationsInclude
     });
 
-    await prisma.$transaction([deleteFollow, deleteNotification]);
+    const [notificationToDelete] = await Promise.all([findNotification, deleteFollow]);
+
+    const deletedNotification = await prisma.notification.delete({
+      where: {
+        id: notificationToDelete?.id,
+      },
+    });
+
+    await notifyUserDeleted (userId, deletedNotification.id);
 
     return new Response();
   } catch (error) {

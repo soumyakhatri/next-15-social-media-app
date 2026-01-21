@@ -14,6 +14,7 @@ interface NotificationsButtonProps {
 export default function NotificationsButton({
   initialState,
 }: NotificationsButtonProps) {
+
   const { data } = useQuery({
     queryKey: ["unread-notification-count"],
     queryFn: () =>
@@ -21,7 +22,7 @@ export default function NotificationsButton({
         .get("/api/notifications/unread-count")
         .json<NotificationCountInfo>(),
     initialData: initialState,
-    refetchInterval: 60 * 1000,
+    // refetchInterval: 60 * 1000,
   });
 
   return (

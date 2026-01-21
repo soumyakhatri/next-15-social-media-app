@@ -1,6 +1,7 @@
 import { validateRequest } from "@/auth";
+import { notifyUserCreated , notifyUserDeleted  } from "@/lib/notifySocket";
 import prisma from "@/lib/prisma";
-import { LikeInfo } from "@/lib/types";
+import { LikeInfo, notificationsInclude } from "@/lib/types";
 
 export async function GET(
   req: Request,
@@ -93,12 +94,17 @@ export async function POST(
         postId: post.id,
         type: "LIKE",
       },
+      include: notificationsInclude,
     });
 
-    await prisma.$transaction([
+    const [_newLike, notification] = await prisma.$transaction([
       upsertLike,
       ...(post.userId !== loggedInUser.id ? [createNotification] : []),
     ]);
+
+    if (post.userId !== loggedInUser.id) {
+      await notifyUserCreated (post.userId, notification);
+    }
 
     return new Response();
   } catch (error) {
@@ -136,7 +142,7 @@ export async function DELETE(
     });
 
     // we dont have the id of the like to be deleted. Delete wont work without it. therefore using deleteMany
-    const deleteNotification = prisma.notification.deleteMany({
+    const findNotification = prisma.notification.findFirst({
       where: {
         issuerId: loggedInUser.id,
         recipientId: post.userId,
@@ -148,7 +154,20 @@ export async function DELETE(
     // deleteMany need not be in a condition because if there is no notification if will just be ignored.
     // notification is not created when the user likes his own post, therefore there is nothing to delete. hence no condition needed.
 
-    await prisma.$transaction([deleteLike, deleteNotification]);
+    const [_deletedLike, linkedNnotification] = await prisma.$transaction([
+      deleteLike,
+      findNotification,
+    ]);
+
+    const deletedNotification = await prisma.notification.delete({
+      where: {
+        id: linkedNnotification?.id,
+      },
+    });
+
+    if (post.userId !== loggedInUser.id) {
+      await notifyUserDeleted (post.userId, deletedNotification.id);
+    }
 
     return new Response();
   } catch (error) {

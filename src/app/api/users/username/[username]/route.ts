@@ -20,7 +20,6 @@ export async function GET(
       },
       select: getUserDataSelect(loggedInUser.id),
     });
-    console.log(user)
     if (!user) {
       return Response.json({ error: "User not found" }, { status: 404 });
     }

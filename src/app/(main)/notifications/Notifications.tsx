@@ -3,17 +3,17 @@
 import InfiniteScrollContainer from "@/components/InfiniteScrollContainer";
 import PostsLoadingSkeleton from "@/components/posts/PostsLoadingSkeleton";
 import kyInstance from "@/lib/ky";
-import { NotificationsPage } from "@/lib/types";
 import {
-  useInfiniteQuery,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import Notification from "./Notification";
+import { useNotificationsInfiniteQuery } from "./useNotificationInfiniteQuery";
 
 export default function Notifications() {
+  const queryClient = useQueryClient();
   const {
     data,
     fetchNextPage,
@@ -21,20 +21,7 @@ export default function Notifications() {
     isFetching,
     isFetchingNextPage,
     status,
-  } = useInfiniteQuery({
-    queryKey: ["notifications"],
-    queryFn: ({ pageParam }) =>
-      kyInstance
-        .get(
-          "/api/notifications",
-          pageParam ? { searchParams: { cursor: pageParam } } : {},
-        )
-        .json<NotificationsPage>(),
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-  });
-
-  const queryClient = useQueryClient();
+  } = useNotificationsInfiniteQuery();
 
   const { mutate } = useMutation({
     mutationFn: () => kyInstance.patch("/api/notifications/mark-as-read"),
@@ -53,7 +40,6 @@ export default function Notifications() {
   }, [mutate]);
 
   const notifications = data?.pages.flatMap((page) => page.notifications) || [];
-
   if (status === "pending") {
     return <PostsLoadingSkeleton />;
   }
