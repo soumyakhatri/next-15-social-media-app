@@ -48,9 +48,14 @@ export default function Notification({ notification }: NotificationProps) {
             <span className="font-bold">{notification.issuer.displayName}</span>{" "}
             <span>{message}</span>
           </div>
-          {notification.post && (
+          {notification.type !== "COMMENT" && notification.post && (
             <div className="line-clamp-3 whitespace-pre-line text-muted-foreground">
               {notification.post.content}
+            </div>
+          )}
+          {notification.type === "COMMENT" && notification.comment && (
+            <div className="line-clamp-3 whitespace-pre-line text-muted-foreground">
+              {notification.comment.content}
             </div>
           )}
         </div>

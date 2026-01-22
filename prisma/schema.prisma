@@ -72,14 +72,14 @@ model Follow {
 }
 
 model Comment {
-  id      String @id @default(cuid())
-  content String
-  postId  String
-  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId  String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  id                 String         @id @default(cuid())
+  content            String
+  postId             String
+  post               Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime       @default(now())
+  linkedNotification Notification[]
 
   @@map("comments")
 }
@@ -115,6 +115,8 @@ model Notification {
   id          String           @id @default(cuid())
   postId      String?
   post        Post?            @relation(fields: [postId], references: [id])
+  commentId   String?
+  comment     Comment?         @relation(fields: [commentId], references: [id])
   recipientId String
   recipient   User             @relation("Recipient", fields: [recipientId], references: [id])
   issuerId    String
