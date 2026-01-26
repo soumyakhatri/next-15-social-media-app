@@ -2,6 +2,7 @@
 
 import { lucia } from "@/auth";
 import prisma from "@/lib/prisma";
+import streamServerClient from "@/lib/stream";
 import { signUpSchema, SignUpValues } from "@/lib/validation";
 import { hash } from "@node-rs/argon2";
 import { generateIdFromEntropySize } from "lucia";
@@ -22,13 +23,13 @@ export async function signup(
       parallelism: 1,
     });
 
-    const userId = generateIdFromEntropySize(10)
+    const userId = generateIdFromEntropySize(10);
 
     const usernameAlreadyExists = await prisma.user.findFirst({
       where: {
         username: {
-            equals: username,
-            mode: "insensitive"
+          equals: username,
+          mode: "insensitive",
         },
       },
     });
@@ -42,8 +43,8 @@ export async function signup(
     const emailAlreadyExists = await prisma.user.findFirst({
       where: {
         email: {
-            equals: email,
-            mode: "insensitive"
+          equals: email,
+          mode: "insensitive",
         },
       },
     });
@@ -54,27 +55,34 @@ export async function signup(
       };
     }
 
-    await prisma.user.create({
-      data: {
+    await prisma.$transaction(async (tx) => {
+      await tx.user.create({
+        data: {
+          id: userId,
+          username,
+          email,
+          displayName: username,
+          passwordHash,
+        },
+      });
+      await streamServerClient.upsertUser({ // stream // if changing the auth then take care of this also.
         id: userId,
         username,
-        email,
-        displayName: username,
-        passwordHash
-      },
+        name: username
+      })
     });
 
     const session = await lucia.createSession(userId, {});
-    const sessionCookie = lucia.createSessionCookie(session.id)
+    const sessionCookie = lucia.createSessionCookie(session.id);
     cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes
-    )
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes,
+    );
 
-    redirect("/")
+    redirect("/");
   } catch (error) {
-    if(isRedirectError(error)) throw error;
+    if (isRedirectError(error)) throw error;
     console.log(error);
     return {
       error: "Something went wrong, please try again later",

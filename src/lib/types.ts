@@ -103,9 +103,9 @@ export const notificationsInclude = {
   },
   comment: {
     select: {
-      content: true
-    }
-  }
+      content: true,
+    },
+  },
 } satisfies Prisma.NotificationInclude;
 
 export type NotificationData = Prisma.NotificationGetPayload<{
@@ -118,5 +118,9 @@ export interface NotificationsPage {
 }
 
 export interface NotificationCountInfo {
-  unreadCount: number
+  unreadCount: number;
+}
+
+export interface MessageCountInfo {
+  unreadCount: number;
 }

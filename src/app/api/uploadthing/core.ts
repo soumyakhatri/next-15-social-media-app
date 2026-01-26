@@ -1,5 +1,6 @@
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
+import streamServerClient from "@/lib/stream";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError, UTApi } from "uploadthing/server";
 
@@ -33,14 +34,24 @@ export const fileRouter = {
       }
       // This code RUNS ON YOUR SERVER after upload
       const newAvatarUrl = file.ufsUrl;
-      await prisma.user.update({
-        where: {
+
+      await Promise.all([
+        prisma.user.update({
+          where: {
+            id: metadata.user.id,
+          },
+          data: {
+            avatar: newAvatarUrl,
+          },
+        }),
+        streamServerClient.partialUpdateUser({
           id: metadata.user.id,
-        },
-        data: {
-          avatar: newAvatarUrl,
-        },
-      });
+          set: {
+            image: newAvatarUrl
+          }
+        })
+      ]);
+
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
       return { avatar: newAvatarUrl };
     }),
