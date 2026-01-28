@@ -6,9 +6,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { DefaultStreamChatGenerics, useChatContext } from "stream-chat-react";
+import { useChatContext } from "stream-chat-react";
 import { useSession } from "../sessionProvider";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useDebounce from "@/hooks/useDebounce";
 import { UserResponse } from "stream-chat";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -26,8 +26,8 @@ export default function NewChatDialog({
   onChatCreated,
 }: NewChatDialogProps) {
   const { client, setActiveChannel } = useChatContext();
-
   const { toast } = useToast();
+  const [usersData, setUsersData] = useState<UserResponse[]>([]);
 
   const { user: loggedInUser } = useSession();
 
@@ -35,7 +35,7 @@ export default function NewChatDialog({
   const debouncedSearchInput = useDebounce(searchInput);
 
   const [selectedUsers, setSelectedUsers] = useState<
-    UserResponse<DefaultStreamChatGenerics>[]
+    UserResponse[]
   >([]);
 
   const { data, isFetching, isError, isSuccess } = useQuery({
@@ -43,21 +43,18 @@ export default function NewChatDialog({
     queryFn: async () => {
       return client.queryUsers(
         {
-          id: {
-            $ne: loggedInUser.id,
-          },
-          role: { $ne: "admin" },
+          // role: { $nin: ["admin"] },
           ...(debouncedSearchInput
             ? {
-                $or: [
-                  {
-                    name: { $autocomplete: debouncedSearchInput },
-                  },
-                  {
-                    username: { $autocomplete: debouncedSearchInput },
-                  },
-                ],
-              }
+              $or: [
+                {
+                  name: { $autocomplete: debouncedSearchInput },
+                },
+                {
+                  username: { $autocomplete: debouncedSearchInput },
+                },
+              ],
+            }
             : {}),
         },
         { name: 1, username: 1 }, // sorting
@@ -66,18 +63,39 @@ export default function NewChatDialog({
     },
   });
 
+  useEffect(() => {
+    if (isSuccess) {
+      setUsersData(data?.users.filter((user) => user.id !== loggedInUser?.id) || []);
+    }
+  }, [isSuccess, data, loggedInUser?.id]);
+
   const mutation = useMutation({
     mutationFn: async () => {
-      const channel = client.channel("messaging", {
+      const channel = client.channel("messaging", undefined, {
         members: [loggedInUser.id, ...selectedUsers.map((u) => u.id)],
-        name:
-          selectedUsers.length > 1
-            ? loggedInUser.displayName +
-              ", " +
-              selectedUsers.map((u) => u.name).join(", ")
-            : undefined,
+        // name:
+        //   selectedUsers.length > 1
+        //     ? loggedInUser.displayName +
+        //     ", " +
+        //     selectedUsers.map((u) => u.name).join(", ")
+        //     : undefined,
       });
       await channel.create();
+
+      if (selectedUsers.length > 1) {
+        const groupName = `${loggedInUser.displayName}, ${selectedUsers
+          .map((u) => u.name)
+          .join(", ")}`;
+
+        // stream-chat types don't include `name` on ChannelResponse in this project,
+        // but Stream's API supports updating it as channel data.
+        const set: Record<string, unknown> = { name: groupName };
+
+        await channel.updatePartial({
+          set,
+        });
+      }
+
       return channel;
     },
     onSuccess: (channel) => {
@@ -92,7 +110,7 @@ export default function NewChatDialog({
       });
     },
   });
-
+  
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="bg-card p-0">
@@ -128,7 +146,7 @@ export default function NewChatDialog({
         </div>
         <div className="h-96 overflow-y-auto">
           {isSuccess &&
-            data?.users.map((user: UserResponse<DefaultStreamChatGenerics>) => (
+            usersData?.map((user: UserResponse) => (
               <UserResult
                 key={user.id}
                 user={user}
@@ -142,7 +160,7 @@ export default function NewChatDialog({
                 }}
               />
             ))}
-          {isSuccess && !data?.users?.length && (
+          {isSuccess && !usersData?.length && (
             <p className="my-3 to-muted-foreground text-center">
               No users found. Try a different name.
             </p>
@@ -168,7 +186,7 @@ export default function NewChatDialog({
 }
 
 interface UserResultProps {
-  user: UserResponse<DefaultStreamChatGenerics>;
+  user: UserResponse;
   selected: boolean;
   onClick: () => void;
 }
@@ -192,7 +210,7 @@ function UserResult({ user, selected, onClick }: UserResultProps) {
 }
 
 interface SelectedUserTagProps {
-  user: UserResponse<DefaultStreamChatGenerics>;
+  user: UserResponse;
   onRemove: () => void;
 }
 
