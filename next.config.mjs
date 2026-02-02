@@ -7,13 +7,21 @@ const nextConfig = {
   },
   serverExternalPackages: ["@node-rs/argon2"],
   images: {
-  remotePatterns: [
-    {
-      protocol: "https",
-      hostname: "**.ufs.sh",   // allow all UploadThing CDNs
-    },
-  ],
-},
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.ufs.sh", // allow all UploadThing CDNs
+      },
+    ],
+  },
+  rewrites: () => {
+    return [
+      {
+        source: "/hashtag/:tag",
+        destination: "/search?q=%23:tag"
+      }
+    ]
+  }
 };
 
 export default nextConfig;
