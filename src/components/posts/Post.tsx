@@ -11,6 +11,9 @@ import Image from "next/image";
 import { Media } from "@prisma/client";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import LikeButton from "./LikeButton";
+import { MessageSquare } from "lucide-react";
+import { useState } from "react";
+import Comments from "../comments/Comments";
 
 interface PostProps {
   post: PostData;
@@ -18,6 +21,7 @@ interface PostProps {
 
 export default function Post({ post }: PostProps) {
   const { user } = useSession();
+  const [showComments, setShowComments] = useState(false);
   return (
     <article className="group/post space-y-3 rounded-2xl bg-card p-5 shadow-sm">
       <div className="flex justify-between gap-3">
@@ -59,13 +63,20 @@ export default function Post({ post }: PostProps) {
         <MediaPreviews attachments={post.attachments} />
       )}
       <hr className="text-muted-foreground" />
-      <LikeButton
-        postId={post.id}
-        initialState={{
-          isLikedByUser: post.likes.some((like) => like.userId === user.id),
-          likes: post._count.likes,
-        }}
-      />
+      <div className="flex items-center gap-5">
+        <LikeButton
+          postId={post.id}
+          initialState={{
+            isLikedByUser: post.likes.some((like) => like.userId === user.id),
+            likes: post._count.likes,
+          }}
+        />
+        <CommentButton
+          post={post}
+          onClick={() => setShowComments(!showComments)}
+        />
+      </div>
+      {showComments && <Comments post={post}/>}
     </article>
   );
 }
@@ -116,4 +127,18 @@ function MediaPreview({ media: { type, url } }: MediaPreviewProps) {
   } else {
     return <p className="text-destructive">Media type not supported</p>;
   }
+}
+
+interface CommentButtonProps {
+  post: PostData;
+  onClick: () => void;
+}
+
+function CommentButton({ post, onClick }: CommentButtonProps) {
+  return (
+    <div className="flex items-center gap-2 cursor-pointer" onClick={() => onClick()}>
+      <MessageSquare className="size-5" />
+      <span className="text-sm font-medium tabular-nums">{post._count.comments}{" "}<span className="hidden sm:inline">comments</span></span>
+    </div>
+  );
 }

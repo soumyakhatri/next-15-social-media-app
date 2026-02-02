@@ -8,13 +8,15 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatRelativeDate(from: Date) {
   const currentDate = new Date();
-  if (currentDate.getTime() - from.getTime() < 24 * 60 * 60 * 1000) { // same day
+  if (currentDate.getTime() - from.getTime() < 24 * 60 * 60 * 1000) {
+    // same day
     return formatDistanceToNowStrict(from, { addSuffix: true });
   } else {
-    if(currentDate.getFullYear() === from.getFullYear()){  //same year
-      return formatDate(from, "MMM d")
+    if (currentDate.getFullYear() === from.getFullYear()) {
+      //same year
+      return formatDate(from, "MMM d");
     } else {
-      return formatDate(from, "MMM d, yyyy" ) // different year
+      return formatDate(from, "MMM d, yyyy"); // different year
     }
   }
 }
@@ -24,4 +26,11 @@ export function formatNumber(n: number): string {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(n);
+}
+
+export function slugify(input: string): string {
+  return input
+    .toLocaleLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^a-z0-9-]/g, "");
 }

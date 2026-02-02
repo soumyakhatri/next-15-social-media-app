@@ -43,15 +43,15 @@ export default function RootLayout({
           routerConfig={extractRouterConfig(fileRouter)}
         />
         <ReactQueryProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-            </ThemeProvider>
-            <Toaster />
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+          <Toaster />
         </ReactQueryProvider>
       </body>
     </html>

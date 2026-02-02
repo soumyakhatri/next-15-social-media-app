@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { useDeletePostMutation } from "./mutations";
-import { useToast } from "../ui/use-toast";
 import LoadingButton from "../LoadingButton";
 
 interface DeletePostDialogProps {
@@ -24,8 +23,6 @@ export default function DeletePostDialog({
   onclose,
 }: DeletePostDialogProps) {
   const mutation = useDeletePostMutation();
-
-  const toast = useToast();
 
   const handleDeletePost = () => {
     mutation.mutate(post.id, {

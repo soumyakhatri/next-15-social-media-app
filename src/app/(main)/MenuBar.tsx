@@ -1,12 +1,32 @@
 import { Button } from "@/components/ui/button";
-import { Bell, Bookmark, Home, Mail } from "lucide-react";
+import { Bookmark, Home } from "lucide-react";
 import Link from "next/link";
+import NotificationsButton from "./NotificationButton";
+import { validateRequest } from "@/auth";
+import prisma from "@/lib/prisma";
+import MessagesButton from "./MessagesButton";
+import streamServerClient from "@/lib/stream";
 
 interface MenuBarProps {
   className?: string;
 }
 
-export default function MenuBar({ className }: MenuBarProps) {
+export default async function MenuBar({ className }: MenuBarProps) {
+  const { user } = await validateRequest();
+
+  if (!user) return null;
+
+  // menu bar is rendered once and we need to get unreadNotificationCount only once then react query will manage it
+
+  const [unreadNotificationCount, unreadMessageCount] = await Promise.all([
+    prisma.notification.count({
+      where: {
+        recipientId: user.id,
+        read: false,
+      },
+    }),
+    (await streamServerClient.getUnreadCount(user.id)).total_unread_count,
+  ]);
   return (
     <div className={className}>
       <Button
@@ -20,28 +40,11 @@ export default function MenuBar({ className }: MenuBarProps) {
           <span className="hidden lg:inline">Home</span>
         </Link>
       </Button>
-      <Button
-        variant={"ghost"}
-        className="flex items-center justify-start gap-3"
-        title="Notifications"
-        asChild
-      >
-        <Link href="/notifications">
-          <Bell />
-          <span className="hidden lg:inline">Notifications</span>
-        </Link>
-      </Button>
-      <Button
-        variant={"ghost"}
-        className="flex items-center justify-start gap-3"
-        title="Messages"
-        asChild
-      >
-        <Link href="/messages">
-          <Mail />
-          <span className="hidden lg:inline">Messages</span>
-        </Link>
-      </Button>
+
+      <NotificationsButton
+        initialState={{ unreadCount: unreadNotificationCount }}
+      />
+      <MessagesButton initialState={{ unreadCount: unreadMessageCount }} />
       <Button
         variant={"ghost"}
         className="flex items-center justify-start gap-3"

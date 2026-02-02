@@ -1,6 +1,10 @@
 import { validateRequest } from "@/auth";
+import {
+  notifyUserCreated ,
+  notifyUserDeleted ,
+} from "@/lib/notifySocket";
 import prisma from "@/lib/prisma";
-import { FollowerInfo } from "@/lib/types";
+import { FollowerInfo, notificationsInclude } from "@/lib/types";
 
 export async function GET(
   req: Request,
@@ -58,7 +62,7 @@ export async function POST(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.follow.upsert({
+    const upsertFollow = prisma.follow.upsert({
       where: {
         followerId_followingId: {
           followerId: loggedInUser.id,
@@ -71,6 +75,22 @@ export async function POST(
       },
       update: {},
     });
+
+    const createNotification = prisma.notification.create({
+      data: {
+        issuerId: loggedInUser.id,
+        recipientId: userId,
+        type: "FOLLOW",
+      },
+      include: notificationsInclude,
+    });
+
+    const [notification] = await prisma.$transaction([
+      createNotification,
+      upsertFollow,
+    ]);
+
+    await notifyUserCreated (userId, notification);
 
     return new Response();
   } catch (error) {
@@ -89,12 +109,31 @@ export async function DELETE(
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.follow.deleteMany({
+    const deleteFollow = prisma.follow.deleteMany({
       where: {
         followerId: loggedInUser.id,
         followingId: userId,
       },
     });
+
+    const findNotification = prisma.notification.findFirst({
+      where: {
+        issuerId: loggedInUser.id,
+        recipientId: userId,
+        type: "FOLLOW",
+      },
+      include: notificationsInclude
+    });
+
+    const [notificationToDelete] = await Promise.all([findNotification, deleteFollow]);
+
+    const deletedNotification = await prisma.notification.delete({
+      where: {
+        id: notificationToDelete?.id,
+      },
+    });
+
+    await notifyUserDeleted (userId, deletedNotification.id);
 
     return new Response();
   } catch (error) {

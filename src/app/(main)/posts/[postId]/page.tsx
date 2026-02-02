@@ -47,7 +47,7 @@ export default async function PostPage({ params: { postId } }: PostPageParams) {
   if (!loggedInUser)
     return (
       <p className="text-destructive">
-        You@apos;re not authorized to view this page.
+        You&apos;re not authorized to view this page.
       </p>
     );
   const post = await getPost(postId, loggedInUser.id);

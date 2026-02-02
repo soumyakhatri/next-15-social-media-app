@@ -6,9 +6,11 @@ export default async function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = await validateRequest();
+  const session = await validateRequest();
 
-  if (user) redirect("/");
+  if (session?.user) {
+    redirect("/");
+  }
 
   return <>{children}</>;
 }
