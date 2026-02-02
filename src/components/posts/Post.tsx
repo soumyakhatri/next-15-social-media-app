@@ -14,6 +14,7 @@ import LikeButton from "./LikeButton";
 import { MessageSquare } from "lucide-react";
 import { useState } from "react";
 import Comments from "../comments/Comments";
+import BookmarkButton from "./BookmarkButton";
 
 interface PostProps {
   post: PostData;
@@ -63,17 +64,27 @@ export default function Post({ post }: PostProps) {
         <MediaPreviews attachments={post.attachments} />
       )}
       <hr className="text-muted-foreground" />
-      <div className="flex items-center gap-5">
-        <LikeButton
+      <div className="flex justify-between gap-5">
+        <div className="flex items-center gap-5">
+          <LikeButton
+            postId={post.id}
+            initialState={{
+              likes: post._count.likes,
+              isLikedByUser: post.likes.some((like) => like.userId === user.id),
+            }}
+          />
+          <CommentButton
+            post={post}
+            onClick={() => setShowComments(!showComments)}
+          />
+        </div>
+        <BookmarkButton
           postId={post.id}
           initialState={{
-            isLikedByUser: post.likes.some((like) => like.userId === user.id),
-            likes: post._count.likes,
+            isBookmarkedByUser: post.bookmarks.some(
+              (bookmark) => bookmark.userId === user.id,
+            ),
           }}
-        />
-        <CommentButton
-          post={post}
-          onClick={() => setShowComments(!showComments)}
         />
       </div>
       {showComments && <Comments post={post}/>}
@@ -121,7 +132,6 @@ function MediaPreview({ media: { type, url } }: MediaPreviewProps) {
           src={url}
           className="mx-auto size-fit max-h-[30rem] rounded-2xl"
         />
-        ;
       </div>
     );
   } else {

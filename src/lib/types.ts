@@ -42,6 +42,14 @@ export const getPostDataInclude = (loggedInUserId: string) => {
         comments: true,
       },
     },
+    bookmarks: {
+      where: {
+        userId: loggedInUserId,
+      },
+      select: {
+        userId: true,
+      },
+    },
     comments: {
       include: getCommentDataInclude(loggedInUserId),
     },
@@ -123,4 +131,8 @@ export interface NotificationCountInfo {
 
 export interface MessageCountInfo {
   unreadCount: number;
+}
+
+export interface BookmarkInfo {
+  isBookmarkedByUser: boolean;
 }
